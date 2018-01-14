@@ -56,6 +56,8 @@ public class BoardManager : MonoBehaviour {
 				GameObject obj = Instantiate (block, new Vector3 (firstX + j*0.55f/2, firstY - j*0.55f*SQRT_3/2, 0f), 
 					Quaternion.identity) as GameObject;
 				board [i, j] = obj.GetComponent<Block> ();
+				board [i, j].row = i;
+				board [i, j].col = j;
 			}
 		}
 
@@ -108,15 +110,15 @@ public class BoardManager : MonoBehaviour {
 		InitPieces ();
 	}
 
-	void OnBlockClick(Block blk)	{
-		blk.ChangeColor (255, 0, 0);
-		for (int i = 0; i < 6; ++i) {
-			Block neighbor = blk.GetBeighbor (i);
-			if (neighbor != null) {
-				neighbor.ChangeColor (255, 0, 0, 0.5f);
-			}
-		}
-	}
+//	void OnBlockClick(Block blk)	{
+//		blk.ChangeColor (255, 0, 0);
+//		for (int i = 0; i < 6; ++i) {
+//			Block neighbor = blk.GetBeighbor (i);
+//			if (neighbor != null) {
+//				neighbor.ChangeColor (255, 0, 0, 0.5f);
+//			}
+//		}
+//	}
 
 	void DetectClick () {
 		if (Input.GetMouseButtonDown (0)) {
@@ -139,5 +141,12 @@ public class BoardManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		DetectClick ();
+	}
+
+	public void SetBlockListColor (HashSet <Vector2> availableList, Color color) {
+		foreach (Vector2 v in availableList) {
+			Block blk = GetBlock ((int)v.x, (int)v.y);
+			blk.ChangeColor (color);
+		}
 	}
 }

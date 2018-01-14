@@ -14,8 +14,13 @@ public class Piece : ClickableMonoBehaviour {
 	private int type;
 	private float x;
 	private float y;
-	private int row;
-	private int col;
+	public int row;
+	public int col;
+	public int historyRow = -1;
+	public int historyCol = -1;
+
+//	private ArrayList avaliableNextMove = new ArrayList();
+	private HashSet <Vector2> avaliableNextMove = new HashSet <Vector2> ();
 
 	void Awake () {
 		spriteRenderer = GetComponent<SpriteRenderer> ();
@@ -33,6 +38,7 @@ public class Piece : ClickableMonoBehaviour {
 		this.row = row;
 		this.col = col;
 		ChangePosition (ctx.GetBlock(row, col).x, ctx.GetBlock(row, col).y);
+		ctx.GetBlock (row, col).SetOccupied (this.type);
 	}
 
 	public void SetPosition (float x, float y) {
@@ -64,8 +70,23 @@ public class Piece : ClickableMonoBehaviour {
 		ChangeColor (color[type]);
 	}
 
-	public void MoveTo(float x, float y) {
-		ChangePosition (x, y);
+	public void MoveTo(int row, int col, BoardManager ctx) {
+		if (avaliableNextMove.Contains (new Vector2 (row, col)) == false) {
+			return;
+		}
+
+		ctx.GetBlock (this.row, this.col).UnsetOccupied ();
+		this.historyRow = row;
+		this.historyCol = col;
+		SetIndex (row, col, ctx);
+	}
+
+	public void SetAvaliableJump (BoardManager ctx) {
+		ctx.SetBlockListColor (avaliableNextMove, new Color (239f/255, 154f/255, 154f/255, 1f));
+	}
+
+	public void UnsetAvaliableJump (BoardManager ctx) {
+		ctx.SetBlockListColor (avaliableNextMove, new Color (194f/255, 194f/255, 194f/255, 1f));
 	}
 
 	public override int OnClick(BoardManager ctx) {
@@ -73,6 +94,7 @@ public class Piece : ClickableMonoBehaviour {
 		if (ctx.selectedPiece != null) {
 			Debug.LogFormat ("Already a piece selected");
 			ctx.selectedPiece.OnUnSelected ();
+			ctx.selectedPiece.UnsetAvaliableJump (ctx);
 
 		} else {
 			Debug.LogFormat ("A piece is selected");
@@ -81,6 +103,11 @@ public class Piece : ClickableMonoBehaviour {
 		ctx.selectedPiece = this;
 		OnSelected();
 
+		ctx.GetBlock(row, col).CalcAvaliableNextMove (avaliableNextMove);
+		SetAvaliableJump (ctx);
+
 		return 0;
 	}
+
+
 }

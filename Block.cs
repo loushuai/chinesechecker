@@ -9,6 +9,8 @@ public class Block : ClickableMonoBehaviour {
 	public Block [] neighbors = new Block[6];
 	public float x;
 	public float y;
+	public int row;
+	public int col;
 	public int occupied = -1; // if occupied by any piece
 
 	void Awake ()
@@ -28,8 +30,8 @@ public class Block : ClickableMonoBehaviour {
 //		Debug.LogFormat ("x: {0}, y: {1}", transform.position.x, transform.position.y);
 	}
 
-	public void ChangeColor (int r, int g, int b, float a = 1f) {
-		spriteRenderer.color = new Color (r, g, b, a);
+	public void ChangeColor (Color color) {
+		spriteRenderer.color = color;
 	}
 
 	public void SetNeighbor(int direction, Block neighbor) {
@@ -59,8 +61,10 @@ public class Block : ClickableMonoBehaviour {
 			return 0;
 		}
 
-		ctx.selectedPiece.MoveTo (this.x, this.y);
+//		ctx.GetBlock (ctx.selectedPiece.row, ctx.selectedPiece.col).UnsetOccupied ();
+		ctx.selectedPiece.MoveTo (this.row, this.col, ctx);
 		ctx.selectedPiece.OnUnSelected ();
+		ctx.selectedPiece.UnsetAvaliableJump (ctx);
 		ctx.selectedPiece = null;
 		return 0;
 	}
@@ -71,5 +75,59 @@ public class Block : ClickableMonoBehaviour {
 
 	public void SetOccupied(int player) {
 		this.occupied = player;
+	}
+
+	public void UnsetOccupied() {
+		this.occupied = -1;
+	}
+
+	public ArrayList AvaliableJump (int direction, HashSet <int> currentSet) {
+		ArrayList ret = new ArrayList();
+
+		if (neighbors[direction] == null || neighbors[direction].IsOccupied() == false) {
+			return ret;
+		}
+
+		Block next = neighbors[direction].neighbors[direction];
+
+		if (next == null || next.IsOccupied() == true) {
+			return ret;
+		}
+
+		if (currentSet.Contains((next.row << 6) + next.col)) {
+			return ret;
+		}
+
+		ret.Add(new Vector2(next.row, next.col));
+		currentSet.Add((next.row << 6) + next.col);
+		for (int dir = 0; dir < 6; ++dir) {
+			ArrayList tmp = next.AvaliableJump (dir, currentSet);
+			foreach (Vector2 v in tmp) {
+				ret.Add (v);
+			}
+		}
+
+		return ret;
+	}
+
+	public void CalcAvaliableNextMove (HashSet <Vector2> avaliableList) {
+		HashSet <int> currentSet = new HashSet <int> ();
+
+		avaliableList.Clear ();
+		currentSet.Add ((row << 6) + col);
+		for (int dir = 0; dir < 6; ++dir) {
+			Block neighbor = neighbors[dir];
+			if (neighbor == null) {
+				continue;
+			} else if (neighbor.IsOccupied () == false) {
+				avaliableList.Add (new Vector2 (neighbor.row, neighbor.col));
+				currentSet.Add ((neighbor.row << 6) + neighbor.col);
+			} else {
+				ArrayList tmp = AvaliableJump (dir, currentSet);
+				foreach (Vector2 v in tmp) {
+					avaliableList.Add (v);
+				}
+			}
+		}
 	}
 }
