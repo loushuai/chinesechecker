@@ -62,7 +62,7 @@ public class Block : ClickableMonoBehaviour {
 		}
 
 //		ctx.GetBlock (ctx.selectedPiece.row, ctx.selectedPiece.col).UnsetOccupied ();
-		ctx.selectedPiece.MoveTo (this.row, this.col, ctx);
+        ctx.selectedPiece.StepTo (this.row, this.col, ctx);
 		ctx.selectedPiece.OnUnSelected ();
 		ctx.selectedPiece.UnsetAvaliableJump (ctx);
 		ctx.selectedPiece = null;

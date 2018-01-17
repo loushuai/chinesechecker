@@ -15,12 +15,16 @@ public class BoardManager : MonoBehaviour {
 
 	private Color [] pieceColor = new Color[] {new Color(255, 0, 0, 1f),
 											   new Color(0, 0, 255, 1f),};
-	private Vector2 [][] initPosition = new Vector2[][] {new Vector2[] {new Vector2(0f, 0f),
-																		 new Vector2(1f, 0f),
-																		 new Vector2(0f, 1f),},
-														  new Vector2[] {new Vector2(0f, 0f),
-														        	 	 new Vector2(1f, 0f),
-																		 new Vector2(1f, 1f),}};
+	private Vector2 [][] initPosition = new Vector2[][] {
+		new Vector2[] {
+			new Vector2(0f, 0f),
+			new Vector2(1f, 0f),
+			new Vector2(0f, 1f),},
+		new Vector2[] {
+			new Vector2((float)(HEIGHT - 1), (float)(WIDTH - 1)),
+			new Vector2((float)(HEIGHT - 2), (float)(WIDTH - 1)),
+			new Vector2((float)(HEIGHT - 1), (float)(WIDTH - 2)),}};
+	private Vector2 [] playerTarget = new Vector2[] {new Vector2 (HEIGHT-1, WIDTH-1), new Vector2 (0, 0)};
 
 	public GameObject block;
 	public GameObject piece;
@@ -29,6 +33,10 @@ public class BoardManager : MonoBehaviour {
 	public Piece [][] pieces = new Piece[2][] { new Piece[] {null, null, null}, 
 												new Piece[] {null, null, null}};
 	public Piece selectedPiece;
+
+	void Awake () {
+
+	}
 
 	public Block GetBlock(int row, int col) {
 		return board [row, col];
@@ -44,6 +52,7 @@ public class BoardManager : MonoBehaviour {
 		pie.ChangeColor (pieceColor[type]);
 		pie.SetType (type);
 		pie.SetIndex (row, col, this);
+		pie.SetTarget (playerTarget[type]);
 
 		pieces [type] [idx] = pie;
 	}
@@ -87,60 +96,19 @@ public class BoardManager : MonoBehaviour {
 	}
 
 	void InitPieces() {
-		int idx = 0;
-		foreach (Vector2 v in initPosition [0]) {
-			CreatePiece ((int)v.x, (int)v.y, 0, idx);
-			++idx;
+		for (int i = 0; i < 2; ++i) {
+			int idx = 0;
+			foreach (Vector2 v in initPosition [i]) {
+				CreatePiece ((int)v.x, (int)v.y, i, idx);
+				++idx;
+			}
 		}
 	}
 
 	// Use this for initialization
 	void Start () {
-//		GameObject instance =
-//			Instantiate (block, new Vector3 (0, 0, 0f), Quaternion.identity) as GameObject;
-//
-//		Block blk = instance.GetComponent <Block> ();
-//		blk.ChangeColor (255, 255, 0, 0.5f);
-//
-//		instance = Instantiate (block, new Vector3 (0.5f, 0.5f, 0f), Quaternion.identity);
-//		blk = instance.GetComponent <Block> ();
-//		blk.ChangeColor (255, 0, 0, 0.5f);
-
 		InitBoard ();
 		InitPieces ();
-	}
-
-//	void OnBlockClick(Block blk)	{
-//		blk.ChangeColor (255, 0, 0);
-//		for (int i = 0; i < 6; ++i) {
-//			Block neighbor = blk.GetBeighbor (i);
-//			if (neighbor != null) {
-//				neighbor.ChangeColor (255, 0, 0, 0.5f);
-//			}
-//		}
-//	}
-
-	void DetectClick () {
-		if (Input.GetMouseButtonDown (0)) {
-			Debug.Log ("Mouse down" + Input.mousePosition);
-
-			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-			RaycastHit hit;
-
-			if (Physics.Raycast (ray, out hit)) {
-				Debug.Log ("Hit by mouse\t");
-				ClickableMonoBehaviour clickable = hit.transform.GetComponent <ClickableMonoBehaviour> ();
-				clickable.OnClick (this);
-//				Block blk = hit.transform.GetComponent <Block> ();
-////				blk.OnClick ();
-//				OnBlockClick(blk);
-			}
-		}
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		DetectClick ();
 	}
 
 	public void SetBlockListColor (HashSet <Vector2> availableList, Color color) {

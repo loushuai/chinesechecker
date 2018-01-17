@@ -10,6 +10,8 @@ public class Piece : ClickableMonoBehaviour {
 		new Color(30f/255, 136f/255, 229f/255, 1f),
 	};
 
+	private Vector2 target;
+
 	private SpriteRenderer spriteRenderer;
 	private int type;
 	private float x;
@@ -20,7 +22,7 @@ public class Piece : ClickableMonoBehaviour {
 	public int historyCol = -1;
 
 //	private ArrayList avaliableNextMove = new ArrayList();
-	private HashSet <Vector2> avaliableNextMove = new HashSet <Vector2> ();
+	public HashSet <Vector2> avaliableNextMove = new HashSet <Vector2> ();
 
 	void Awake () {
 		spriteRenderer = GetComponent<SpriteRenderer> ();
@@ -34,10 +36,10 @@ public class Piece : ClickableMonoBehaviour {
 		this.type = type;
 	}
 
-	public void SetIndex (int row, int col, BoardManager ctx) {
+	public void SetIndex (int row, int col, BoardManager ctx, bool paint = true) {
 		this.row = row;
 		this.col = col;
-		ChangePosition (ctx.GetBlock(row, col).x, ctx.GetBlock(row, col).y);
+		ChangePosition (ctx.GetBlock(row, col).x, ctx.GetBlock(row, col).y, paint);
 		ctx.GetBlock (row, col).SetOccupied (this.type);
 	}
 
@@ -46,9 +48,11 @@ public class Piece : ClickableMonoBehaviour {
 		this.y = y;
 	}
 
-	public void ChangePosition (float x, float y) {
-		Transform transform = GetComponent<Transform> ();
-		transform.SetPositionAndRotation (new Vector3(x, y, 0f), Quaternion.identity);
+	public void ChangePosition (float x, float y, bool paint = true) {
+		if (paint) {
+			Transform transform = GetComponent<Transform> ();
+			transform.SetPositionAndRotation (new Vector3(x, y, 0f), Quaternion.identity);
+		}
 		this.x = x;
 		this.y = y;
 	}
@@ -64,21 +68,40 @@ public class Piece : ClickableMonoBehaviour {
 
 	public void OnSelected () {
 		ChangeColor (selectedColor[type]);
+
+		//debug
+		Debug.LogFormat ("Score: {0}, r {1}, c {2}", Score(), row, col);
 	}
 
 	public void OnUnSelected () {
 		ChangeColor (color[type]);
 	}
 
-	public void MoveTo(int row, int col, BoardManager ctx) {
-		if (avaliableNextMove.Contains (new Vector2 (row, col)) == false) {
-			return;
-		}
+    public Vector2 MoveTo(int row, int col, BoardManager ctx, bool paint = true) {
+		//if (avaliableNextMove.Contains (new Vector2 (row, col)) == false) {
+  //          return new Vector2(this.row, this.col) ;
+		//}
 
 		ctx.GetBlock (this.row, this.col).UnsetOccupied ();
-		this.historyRow = row;
-		this.historyCol = col;
-		SetIndex (row, col, ctx);
+		this.historyRow = this.row;
+		this.historyCol = this.col;
+		SetIndex (row, col, ctx, paint);
+
+        return new Vector2(this.historyRow, this.historyCol); 
+	}
+
+    public Vector2 StepTo(int row, int col, BoardManager ctx) {
+        return MoveTo(row, col, ctx);
+    }
+
+	public void UndoMove (BoardManager ctx, bool paint = true) {
+		if (historyRow < 0 || historyCol < 0) {
+			return;
+		}
+		ctx.GetBlock (row, col).UnsetOccupied ();
+		SetIndex (historyRow, historyCol, ctx, paint);
+		historyRow = -1;
+		historyCol = -1;
 	}
 
 	public void SetAvaliableJump (BoardManager ctx) {
@@ -109,5 +132,23 @@ public class Piece : ClickableMonoBehaviour {
 		return 0;
 	}
 
+	public void SetTarget (Vector2 target) {
+		this.target = target;
+	}
 
+	public int Score () {
+		int d1 = this.row - (int)this.target.x;
+		int d2 = this.col - (int)this.target.y;
+		return d1*d1 + d2*d2;
+	}
+
+	public int Gain (Vector2 move) {
+		int d1 = (int)move.x - (int)this.target.x;
+		int d2 = (int)move.y - (int)this.target.y;
+		return Score() - (d1*d1 + d2*d2);
+	}
+
+	public void UpdateAvaliableMove (BoardManager ctx) {
+		ctx.GetBlock(row, col).CalcAvaliableNextMove (avaliableNextMove);
+	}
 }
