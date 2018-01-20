@@ -6,13 +6,15 @@ public class GameManager : MonoBehaviour {
 	public GameObject boardPrefab;
 	private GameObject board;
 	private BoardManager boardManager;
-	private AI ai;
+	private AI simpleai;
+    private AI alphabetaai;
 
 	void Awake () {
 		this.board = Instantiate (boardPrefab, new Vector3 (0f, 0f, 0f), Quaternion.identity) as GameObject;
 		this.boardManager = this.board.GetComponent <BoardManager> ();
-		//this.ai = new GreedyAI (this.boardManager);
-        this.ai = new MinMaxAI(this.boardManager);
+        //this.ai = new GreedyAI (this.boardManager);
+        this.simpleai = new GreedyAI(this.boardManager);
+        this.alphabetaai = new MinMaxAI(this.boardManager);
 	}
 
 	void DetectClick () {
@@ -28,7 +30,11 @@ public class GameManager : MonoBehaviour {
 				clickable.OnClick (this.boardManager);
 			} else {
 				// just for test
-				ai.NextMove (0);
+                //if (boardManager.Evalue(0) >= -12 ) {
+                //    simpleai.NextMove(0);
+                //} else {
+                    alphabetaai.NextMove(0);    
+                //}				
 			}
 		}
 	}

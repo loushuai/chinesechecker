@@ -50,8 +50,8 @@ public class Piece : ClickableMonoBehaviour {
 
 	public void ChangePosition (float x, float y, bool paint = true) {
 		if (paint) {
-			Transform transform = GetComponent<Transform> ();
-			transform.SetPositionAndRotation (new Vector3(x, y, 0f), Quaternion.identity);
+			Transform trans = GetComponent<Transform> ();
+			trans.SetPositionAndRotation (new Vector3(x, y, 0f), Quaternion.identity);
 		}
 		this.x = x;
 		this.y = y;
@@ -78,31 +78,21 @@ public class Piece : ClickableMonoBehaviour {
 	}
 
     public Vector2 MoveTo(int row, int col, BoardManager ctx, bool paint = true) {
-		//if (avaliableNextMove.Contains (new Vector2 (row, col)) == false) {
-  //          return new Vector2(this.row, this.col) ;
-		//}
-
 		ctx.GetBlock (this.row, this.col).UnsetOccupied ();
 		this.historyRow = this.row;
 		this.historyCol = this.col;
+        ctx.UpdatePlayerValue(this.type, Gain(new Vector2(row, col)));
 		SetIndex (row, col, ctx, paint);
 
         return new Vector2(this.historyRow, this.historyCol); 
 	}
 
-    public Vector2 StepTo(int row, int col, BoardManager ctx) {
-        return MoveTo(row, col, ctx);
+    public void StepTo(int row, int col, BoardManager ctx) {
+        if (avaliableNextMove.Contains(new Vector2(row, col)) == false) {
+            return;
+        }
+        MoveTo(row, col, ctx);
     }
-
-	public void UndoMove (BoardManager ctx, bool paint = true) {
-		if (historyRow < 0 || historyCol < 0) {
-			return;
-		}
-		ctx.GetBlock (row, col).UnsetOccupied ();
-		SetIndex (historyRow, historyCol, ctx, paint);
-		historyRow = -1;
-		historyCol = -1;
-	}
 
 	public void SetAvaliableJump (BoardManager ctx) {
 		ctx.SetBlockListColor (avaliableNextMove, new Color (239f/255, 154f/255, 154f/255, 1f));
@@ -145,7 +135,7 @@ public class Piece : ClickableMonoBehaviour {
 	public int Gain (Vector2 move) {
 		int d1 = (int)move.x - (int)this.target.x;
 		int d2 = (int)move.y - (int)this.target.y;
-		return Score() - (d1*d1 + d2*d2);
+        return (d1*d1 + d2*d2) - Score();
 	}
 
 	public void UpdateAvaliableMove (BoardManager ctx) {

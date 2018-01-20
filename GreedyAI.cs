@@ -14,7 +14,7 @@ public class GreedyAI : AI {
 		foreach (Piece piece in ctx.pieces[player]) {
 			piece.UpdateAvaliableMove (ctx);
 			foreach (Vector2 move in piece.avaliableNextMove) {
-				int gain = piece.Gain (move);
+				int gain = -piece.Gain (move);
 				if (gain > maxGain) {
 					bestMove = move;
 					bestPiece = piece;

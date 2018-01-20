@@ -9,8 +9,8 @@ using UnityEngine;
 
 
 public class BoardManager : MonoBehaviour {
-	private const int WIDTH = 4;
-	private const int HEIGHT = 4;
+	private const int WIDTH = 5;
+	private const int HEIGHT = 5;
 	private const float SQRT_3 = 1.732f;
 
 	private Color [] pieceColor = new Color[] {new Color(255, 0, 0, 1f),
@@ -33,6 +33,7 @@ public class BoardManager : MonoBehaviour {
 	public Piece [][] pieces = new Piece[2][] { new Piece[] {null, null, null}, 
 												new Piece[] {null, null, null}};
 	public Piece selectedPiece;
+    public int [] playerValue = new int[] {0, 0};
 
 	void Awake () {
 
@@ -95,6 +96,14 @@ public class BoardManager : MonoBehaviour {
 		}
 	}
 
+    void InitPlayerValue() {
+        for (int player = 0; player < 2; ++player) {
+            foreach (Piece p in this.pieces[player]) {
+                this.playerValue[player] += p.Score();
+            }
+        }
+    }
+
 	void InitPieces() {
 		for (int i = 0; i < 2; ++i) {
 			int idx = 0;
@@ -109,6 +118,7 @@ public class BoardManager : MonoBehaviour {
 	void Start () {
 		InitBoard ();
 		InitPieces ();
+        InitPlayerValue(); 
 	}
 
 	public void SetBlockListColor (HashSet <Vector2> availableList, Color color) {
@@ -117,4 +127,12 @@ public class BoardManager : MonoBehaviour {
 			blk.ChangeColor (color);
 		}
 	}
+
+    public int Evalue(int player) {
+        return 0*playerValue[(player + 1) % 2] - playerValue[player];
+    }
+
+    public void UpdatePlayerValue(int player, int value) {
+        this.playerValue[player] += value;
+    }
 }
